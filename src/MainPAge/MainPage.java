@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.FileNameMap;
+import java.text.NumberFormat;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,19 +22,26 @@ public class MainPage extends JFrame {
     private JButton StartButton;
     private JLabel Timer;
     private JButton StopButton;
-    private int count = 0;
+    private JLabel CorrectCount;
+    private Integer count = 0;
+    private int total = 0;
     private char temp;
     public static ArrayList<String> FinalKataList = new ArrayList<>();
     public static HashMap<String, String> HashRef = new HashMap<>();
     public static ArrayList<Character> currentKatakana = new ArrayList<>();
     private int index;
     private String Katakana;
+    private long StartTime;
+    private long EndTime;
 
     public void randomize() {
         Random r = new Random();
-
-        index = r.nextInt(FinalKataList.size());
-        Katakana = FinalKataList.get(index);
+        String newKatakana;
+        do {
+            int index = r.nextInt(FinalKataList.size());
+            newKatakana = FinalKataList.get(index);
+        } while (newKatakana.equals(Katakana)); //repeat until they are not equal
+        Katakana = newKatakana;
     }
 
     public void setquestion(KeyEvent e){
@@ -53,6 +61,26 @@ public class MainPage extends JFrame {
         } catch (StringIndexOutOfBoundsException s) {
             return false;
         }
+    }
+    public String HourFormatter(int Time){
+        String outputTime = Integer.toString((Integer) Time);
+        if (outputTime.length()>4){
+            StopButton.doClick();
+            ErrorDeclare.setText("Time Limit Crossed");
+            return null;
+        }
+        while(outputTime.length()<4){
+            outputTime = "0"+outputTime;
+        }
+        return outputTime;
+    }
+
+    public String TimeFormatter(int Time){
+        String outputTime = Integer.toString((Integer) Time);
+        while(outputTime.length()<2){
+            outputTime = "0"+outputTime;
+        }
+        return outputTime;
     }
 
     public MainPage(String name) {
@@ -89,17 +117,21 @@ public class MainPage extends JFrame {
 
                             if (CompareString(HashRef.get(Katakana), input)) {
                                 if (HashRef.get(Katakana).length() == input.length()) {
+                                    EndTime = System.currentTimeMillis();
                                     count++;
+                                    total++;
                                     setquestion(e);
-                                    System.out.print(count);
+//                                    System.out.print(count);
 //                                    for (int i = 0; i < input.length(); i++) {
 //                                        r.keyPress(KeyEvent.VK_BACK_SPACE);
 //                                        r.keyRelease(KeyEvent.VK_BACK_SPACE);
 //                                    }
                                 }
                             } else {
+                                EndTime = System.currentTimeMillis();
                                 setquestion(e);
-                                System.out.print(count);
+                                total++;
+//                                System.out.print(count);
 //                                for (int i = 0; i <= input.length(); i++) {
 //                                    e.consume();
 //
@@ -153,27 +185,6 @@ public class MainPage extends JFrame {
 //            }
 //        });
 
-        textField1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-//                boolean ISCorrect = false;
-//                for (int i = 0; i <= (HashRef.get(Katakana)).length(); i++) {
-//                    ISCorrect = false;
-//                    if (temp != HashRef.get(Katakana).charAt(i)) {
-//                        break;
-//                    }
-//                    ISCorrect = true ;
-//                }
-//                if(ISCorrect){
-//                    count++;
-//                }
-//                index = r.nextInt(FinalKataList.size());
-//                Katakana = FinalKataList.get(index);
-//                Kata.setText(Katakana);
-
-            }
-        });
-
         OPTIONS.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -188,6 +199,7 @@ public class MainPage extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
+                    StartTime = System.currentTimeMillis();
                     textField1.setEditable(true);
                     Kata.setText(Katakana);
                     textField1.requestFocus();
@@ -201,7 +213,19 @@ public class MainPage extends JFrame {
         StopButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                long TotalTime = EndTime-StartTime;
+                int TimeInHours = (int) (TotalTime/(60*60*1000));
+                int TimeInMinutes = (int) ((TotalTime/(60*1000))-(TimeInHours*60));
+                int TimeInSecond = (int) ((TotalTime/1000)-(TimeInHours*60*60)-(TimeInMinutes*60));
+                int TimeInMilliseccond = (int) ((TotalTime%1000)/10);
+                CorrectCount.setText("Points: " + Integer.toString(count)+"/"+total);
+                System.out.println(TimeInHours);
+                System.out.println(TimeInMinutes);
+                System.out.println(TimeInSecond);
+                System.out.println(TimeInMilliseccond);
+                Timer.setText("Time Taken: " + HourFormatter(TimeInHours)+":"+TimeFormatter(TimeInMinutes)+":"+TimeFormatter(TimeInSecond)+":"+TimeInMilliseccond);
                 Kata.setText("Press Start to Begin");
+                total = 0;
                 count = 0;
                 textField1.setText("");
                 textField1.setEditable(false);
